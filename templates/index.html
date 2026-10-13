@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f3f6f2">
+  <title>Textile Loop | Bin Operations</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Textile Loop dashboard">
+      <span class="brand-mark" aria-hidden="true">tl</span>
+      <span>textile<span class="brand-light">loop</span></span>
+    </a>
+    <div class="topbar-meta"><span class="live-dot"></span> System overview <span class="divider">/</span> Updated {{ updated_at }}</div>
+  </header>
+
+  <main class="dashboard">
+    <section class="page-heading">
+      <div>
+        <p class="eyebrow">OPERATIONS / NETWORK</p>
+        <h1>Collection overview</h1>
+        <p class="subheading">Track textile recovery across your collection points.</p>
+      </div>
+      <span class="demo-label">SAMPLE DATA</span>
+    </section>
+
+    <section class="metrics" aria-label="Network summary">
+      <article class="metric metric-green">
+        <p class="metric-label">Recovered today</p>
+        <p class="metric-value">{{ "%.1f"|format(total_weight) }} <span>kg</span></p>
+        <p class="metric-note">Across {{ bins|length }} collection points</p>
+      </article>
+      <article class="metric metric-alert">
+        <p class="metric-label">Collections due</p>
+        <p class="metric-value">{{ due_count }} <span>bins</span></p>
+        <p class="metric-note">At or above 80% capacity</p>
+      </article>
+      <article class="metric metric-blue">
+        <p class="metric-label">Average fill level</p>
+        <p class="metric-value">{{ average_fill }}<span>%</span></p>
+        <p class="metric-note">Network-wide capacity</p>
+      </article>
+      <article class="metric metric-neutral">
+        <p class="metric-label">Active collection points</p>
+        <p class="metric-value">{{ bins|length }} <span>online</span></p>
+        <p class="metric-note">All sensors reporting</p>
+      </article>
+    </section>
+
+    <section class="bin-section" aria-labelledby="bins-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">LIVE INVENTORY</p>
+          <h2 id="bins-title">Collection points <span class="count">{{ bins|length }}</span></h2>
+        </div>
+        <div class="table-controls">
+          <label class="search-control">
+            <span class="sr-only">Search bins by ID or location</span>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.8" cy="8.8" r="5.8"></circle><path d="m13.2 13.2 4 4"></path></svg>
+            <input id="bin-search" type="search" placeholder="Search bins" autocomplete="off">
+          </label>
+          <label class="select-control">
+            <span class="sr-only">Filter bins by status</span>
+            <select id="status-filter">
+              <option value="all">All statuses</option>
+              <option value="Collection due">Collection due</option>
+              <option value="Ready">Ready</option>
+              <option value="Online">Online</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Bin</th><th>Location</th><th>Fill level</th><th>Textiles</th><th>Status</th></tr>
+          </thead>
+          <tbody id="bin-rows">
+            {% for bin in bins %}
+            <tr data-search="{{ bin.id }} {{ bin.location|lower }}" data-status="{{ bin.status }}">
+              <td class="bin-id">{{ bin.id }}</td>
+              <td>{{ bin.location }}</td>
+              <td>
+                <div class="fill-cell">
+                  <div class="fill-track"><span class="fill-bar {% if bin.fill >= 80 %}fill-high{% elif bin.fill <= 15 %}fill-low{% endif %}" style="width: {{ bin.fill }}%"></span></div>
+                  <span class="fill-number">{{ bin.fill }}%</span>
+                </div>
+              </td>
+              <td>{{ "%.1f"|format(bin.weight) }} kg</td>
+              <td><span class="status status-{{ 'due' if bin.status == 'Collection due' else 'ready' if bin.status == 'Ready' else 'online' }}"><span></span>{{ bin.status }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <p id="empty-state" class="empty-state" hidden>No collection points match these filters.</p>
+      </div>
+      <p class="data-note">Demo readings for interface preview. Live sensor and Firestore data are not connected.</p>
+    </section>
+  </main>
+  <script>
+    const searchInput = document.querySelector("#bin-search");
+    const statusFilter = document.querySelector("#status-filter");
+    const rows = [...document.querySelectorAll("#bin-rows tr")];
+    const emptyState = document.querySelector("#empty-state");
+
+    function filterRows() {
+      const query = searchInput.value.trim().toLowerCase();
+      const status = statusFilter.value;
+      let visibleCount = 0;
+
+      for (const row of rows) {
+        const matchesQuery = row.dataset.search.includes(query);
+        const matchesStatus = status === "all" || row.dataset.status === status;
+        row.hidden = !(matchesQuery && matchesStatus);
+        if (!row.hidden) visibleCount += 1;
+      }
+
+      emptyState.hidden = visibleCount > 0;
+    }
+
+    searchInput.addEventListener("input", filterRows);
+    statusFilter.addEventListener("change", filterRows);
+  </script>
+</body>
+</html>

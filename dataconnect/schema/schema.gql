@@ -1,0 +1,26 @@
+type User @table {
+  email: String!
+  role: String!
+  totalPoints: Int
+}
+
+type Bin @table {
+  latitude: Float!
+  longitude: Float!
+  currentCapacity: Int!
+  lastServicedAt: Timestamp
+  binStatus: String
+}
+
+type DisposalLog @table {
+  timestamp: Timestamp!
+  pointsEarned: Int!
+  bin: Bin!
+  user: User!
+}
+
+type Reward @table {
+  amount: Int!
+  dateEarned: Date!
+  user: User!
+}

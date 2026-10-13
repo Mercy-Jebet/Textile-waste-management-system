@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>⚙️ Admin Panel</h1>
+
+    <h2>Bins</h2>
+    {% if bins %}
+    {% for key, b in bins.items() %}
+    <p>{{ key }} — {{ b.fill_level }}% — {{ b.status }}</p>
+    {% endfor %}
+    {% endif %}
+
+    <h2>Total Consumers</h2>
+    <p>{{ consumers|length if consumers else 0 }} registered</p>
+
+    <h2>Total Deposits</h2>
+    <p>{{ deposits|length if deposits else 0 }} deposits made</p>
+</body>
+</html>

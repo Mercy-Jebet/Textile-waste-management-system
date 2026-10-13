@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Consumer Rewards</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>🎮 Consumer Rewards</h1>
+
+    <h2>Welcome {{ consumer.name }}</h2>
+    <h3>Points Balance: {{ consumer.points_balance }} pts</h3>
+
+    <form action="/deposit/{{ consumer.consumer_id }}" method="POST">
+        <button type="submit">✅ Confirm Textile Deposit (+10 pts)</button>
+    </form>
+
+    <h3>Deposit History</h3>
+    {% if deposits %}
+    <table>
+        <tr>
+            <th>Date</th>
+            <th>Points Earned</th>
+        </tr>
+        {% for key, dep in deposits.items() %}
+        {% if dep.consumer_id == consumer.consumer_id %}
+        <tr>
+            <td>{{ dep.deposit_timestamp }}</td>
+            <td>{{ dep.points_earned }}</td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+    </table>
+    {% else %}
+    <p>No deposits yet</p>
+    {% endif %}
+</body>
+</html>

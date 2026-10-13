@@ -1,0 +1,22 @@
+mutation SeedDatabase @transaction {
+  user_insertMany(data: [
+    { email: "alice@example.com", role: "admin", totalPoints: 100 },
+    { email: "bob@example.com", role: "user", totalPoints: 50 },
+    { email: "charlie@example.com", role: "user", totalPoints: 25 }
+  ])
+  bin_insertMany(data: [
+    { latitude: 37.7749, longitude: -122.4194, currentCapacity: 10, binStatus: "active" },
+    { latitude: 37.7833, longitude: -122.4167, currentCapacity: 80, binStatus: "full" },
+    { latitude: 37.7914, longitude: -122.3917, currentCapacity: 45, binStatus: "active" }
+  ])
+  disposalLog_insertMany(data: [
+    { timestamp: "2023-10-01T10:00:00Z", pointsEarned: 10, binId: "00000000-0000-0000-0000-000000000000", userId: "00000000-0000-0000-0000-000000000000" },
+    { timestamp: "2023-10-01T11:00:00Z", pointsEarned: 5, binId: "00000000-0000-0000-0000-000000000001", userId: "00000000-0000-0000-0000-000000000001" },
+    { timestamp: "2023-10-01T12:00:00Z", pointsEarned: 15, binId: "00000000-0000-0000-0000-000000000002", userId: "00000000-0000-0000-0000-000000000002" }
+  ])
+  reward_insertMany(data: [
+    { amount: 100, dateEarned: "2023-10-05", userId: "00000000-0000-0000-0000-000000000000" },
+    { amount: 50, dateEarned: "2023-10-06", userId: "00000000-0000-0000-0000-000000000001" },
+    { amount: 25, dateEarned: "2023-10-07", userId: "00000000-0000-0000-0000-000000000002" }
+  ])
+}

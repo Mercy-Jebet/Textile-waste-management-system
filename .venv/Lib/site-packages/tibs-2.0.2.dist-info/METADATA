@@ -1,0 +1,272 @@
+Metadata-Version: 2.4
+Name: tibs
+Version: 2.0.2
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
+Classifier: Programming Language :: Python :: 3.14
+Classifier: Programming Language :: Python :: Free Threading :: 3 - Stable
+Classifier: Programming Language :: Rust
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Typing :: Typed
+Requires-Dist: gfloat==0.5.2 ; extra == 'conformance'
+Requires-Dist: ml-dtypes==0.5.4 ; extra == 'conformance'
+Requires-Dist: pytest>=9.0.0 ; extra == 'dev'
+Requires-Dist: hypothesis>=6.151.0 ; extra == 'dev'
+Requires-Dist: pytest-benchmark>=5.2.0 ; extra == 'dev'
+Requires-Dist: pyright>=1.1.389 ; extra == 'dev'
+Requires-Dist: build ; extra == 'dev'
+Requires-Dist: bitarray ; extra == 'dev'
+Provides-Extra: conformance
+Provides-Extra: dev
+License-File: LICENSE
+Summary: A sleek Python library for binary data.
+Home-Page: https://github.com/scott-griffiths/tibs
+Author-email: Scott Griffiths <dr.scottgriffiths@gmail.com>
+License: The MIT License
+	
+	Copyright (c) 2025 Scott Griffiths (dr.scottgriffiths@gmail.com)
+	
+	Permission is hereby granted, free of charge, to any person obtaining a copy
+	of this software and associated documentation files (the "Software"), to deal
+	in the Software without restriction, including without limitation the rights
+	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+	copies of the Software, and to permit persons to whom the Software is
+	furnished to do so, subject to the following conditions:
+	
+	The above copyright notice and this permission notice shall be included in
+	all copies or substantial portions of the Software.
+	
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+	THE SOFTWARE.
+	
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown; charset=UTF-8; variant=GFM
+Project-URL: documentation, https://tibs.readthedocs.io/
+Project-URL: homepage, https://github.com/scott-griffiths/tibs
+
+<p>
+  <img src="https://raw.githubusercontent.com/scott-griffiths/tibs/main/doc/_static/tibs_cat.png" alt="Tibs cat" height="130" align="left" />
+  <a href="https://github.com/scott-griffiths/tibs">
+    <img src="https://raw.githubusercontent.com/scott-griffiths/tibs/main/doc/tibs.png" alt="tibs" height="110" />
+  </a><br />
+  A sleek Python library for binary data
+</p>
+
+<br clear="left" />
+
+
+[![PyPI - Version](https://img.shields.io/pypi/v/tibs?label=PyPI&logo=pypi&logoColor=white)](https://pypi.org/project/tibs/)
+[![CI badge](https://github.com/scott-griffiths/tibs/actions/workflows/new_ci.yaml/badge.svg)](https://github.com/scott-griffiths/tibs/actions/workflows/new_ci.yaml)
+[![Docs](https://img.shields.io/readthedocs/tibs?logo=readthedocs&logoColor=white)](https://tibs.readthedocs.io/en/latest/)
+![PyPI - License](https://img.shields.io/pypi/l/tibs)
+&nbsp; &nbsp;
+[![Pepy Total Downloads](https://img.shields.io/pepy/dt/tibs?logo=python&logoColor=white&labelColor=blue&color=blue)](https://www.pepy.tech/projects/tibs)
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/tibs?label=%40&logoColor=white&labelColor=blue&color=blue)](https://pypistats.org/packages/tibs)
+
+
+----
+
+``tibs`` is a Python library for binary data.
+It's 100% written in Rust and has excellent performance.
+
+Use it for packets, registers, instruction
+formats, bitsets, compressed data and streams where fields can have many different
+interpretations and be any number of bits long.
+
+It is used to power the popular [bitstring](https://github.com/scott-griffiths/bitstring)
+library, which is by the same author. The full documentation is available on [Read the Docs](https://tibs.readthedocs.io/en/latest/).
+
+
+## Install
+
+```bash
+pip install tibs
+```
+
+Tibs works with Python 3.11 and later. There are pre-built wheels for most
+common platforms; if there are issues then please let me know.
+
+## Overview
+
+The tibs library provides two main classes: `Tibs`, which is an immutable sequence of bits
+(similar to how `bytes` works in Python as a sequence of bytes) and `Mutibs`, which is a mutable version (similar to `bytearray` in Python).
+
+They can be used in a few ways, depending on what you need:
+
+### 1. As a container of bits
+
+`Tibs` provides an interface very similar
+to `bytes` and other Python containers - you can slice it, concatenate, search it etc. in a
+familiar way, with `Mutibs` adding on mutating methods.
+
+`find` · `rfind` · `find_all` · `replace` · `count` · `starts_with` · `split_at` · `chunks` · `+` · `in`
+
+This 'container of bits' mental model might be all that you need, but the library also gives
+you two broad views of the binary data.
+
+### 2. As Typed fields
+
+Pull integers, floats, bytes, hex or binary of any
+bit length straight out of the bits, without hand-rolling shifts and masks.
+Little-endian ordering and LSB0 field labels are handled elegantly so you don't reshuffle data
+yourself, and `extracted` / `deposit` reach fields that are scattered across a word.
+
+When parsing streams, a `Reader` can wrap the `Tibs` to hold a bit position for
+you, so a parsing loop never has to work out where the next one starts.
+
+`from_u` · `to_f` · `bin` / `hex` · `Dtype` · `pack` / `unpack` · `.le` · `.lsb0` · `field()` · `extracted` / `deposit` · `Reader` · f-string formatting
+
+### 3. As a set of bits
+
+For bitwise algebra, cardinalities and set predicates, with
+no intermediate object built along the way. `Mutibs` can also be used as a large mutable bitset.
+
+`&` `|` `^` `~` · `count_and` · `count_xor` · `intersects` · `is_subset_of` · `set` / `unset` · `all` / `any`
+
+
+And it's fast — usually significantly faster than similar libraries.
+
+
+## A Taster
+
+Some real code to illustrate.
+
+**As a container of bits.** `Tibs` works like `bytes`, except that the unit is the bit.
+`Mutibs` is its mutable counterpart, for patching in place.
+
+```pycon
+>>> from tibs import Tibs
+>>> # A 5-bit header, a message, then 3 bits of padding: nothing is byte aligned.
+>>> frame = Tibs('0b10110') + b'the cat rarely blinked' + [0, 0, 0]
+>>> bytes(frame).find(b'cat')      # using bytes, the message can't be found
+-1
+>>> pos = frame.find(b'cat')       # but the tibs still knows where it is
+>>> pos, frame[pos:pos + 24].bytes
+(37, b'cat')
+
+>>> patched = frame.to_mutibs()
+>>> patched[pos:pos + 24] = b'squirrel'
+>>> patched[5:-3].bytes
+b'the squirrel rarely blinked'
+>>> len(frame), len(patched)       # 40 bits longer, spliced in at bit 37
+(184, 224)
+
+```
+
+**As typed fields.** Read and write integers, floats and strings of any bit length,
+with a view taking care of byte order and bit numbering — the sort of job that gets
+awkward quickly with plain bytes and masks.
+
+```pycon
+>>> # What's inside a float? A sign bit, an 8-bit exponent and a 23-bit fraction.
+>>> x = Tibs.from_f(-118.625, 32)
+>>> f"{x:_.8b}"                    # grouped into bytes to make it readable
+'11000010_11101101_01000000_00000000'
+>>> sign, exponent, fraction = x.split_at([1, 9])
+>>> (-1) ** sign.u * 2 ** (exponent.u - 127) * (1 + fraction.u / 2 ** 23)
+-118.625
+
+>>> Tibs(b'\x00\x40\xed\xc2').le.f     # the same value, from a little-endian file
+-118.625
+>>> Tibs.from_u(x.u + 1, 32).f         # the adjacent float32, one bit away
+-118.62500762939453
+
+```
+
+**As a set of bits.** Bitwise algebra and cardinalities over millions of bits, without
+building an intermediate object just to count it.
+
+```pycon
+>>> from math import isqrt
+>>> from tibs import Mutibs
+>>> # A sieve of Eratosthenes over ten million numbers, one bit each.
+>>> limit = 10_000_000
+>>> sieve = Mutibs.from_ones(limit)
+>>> sieve.unset([0, 1])
+>>> for p in range(2, isqrt(limit) + 1):
+...     if sieve[p]:
+...         sieve.unset(range(p * p, limit, p))
+...
+>>> sieve.count(1)                     # primes below ten million
+664579
+
+>>> # Counting twin, cousin and sexy primes: pairs 2, 4 and 6 apart:
+>>> [sieve.count_and(sieve >> d) for d in (2, 4, 6)]
+[58980, 58622, 117207]
+
+```
+
+The full documentation covers construction, interpretation, endianness, searching and replacing,
+indexing, serialization, views, dtypes and much more.
+
+## Performance
+
+Tibs is written in Rust with PyO3. The repository contains a dedicated
+[performance regression suite](tests/performance_regression.py) and
+[CI workflow](.github/workflows/performance.yaml) that compare benchmark
+medians against the base commit.
+
+For local comparisons, [`tests/performance_comparison.py`](tests/performance_comparison.py)
+checks common operations against the `bitarray` library and the standard Python library. With
+`bitarray` installed, run:
+
+```bash
+python tests/performance_comparison.py
+```
+
+Benchmarks are machine-dependent, but tibs is often almost unreasonably fast.
+
+## Examples
+
+The examples are small, but they are meant to look like real binary-data tasks.
+Each is walked through in the documentation, with the runnable code in
+[`examples/`](examples/). Some examples of the examples:
+
+
+| Example |  |
+| --- | --- |
+| [Record stream](https://tibs.readthedocs.io/en/latest/example_record_stream.html) | Read tagged, variable-length records with a `Reader`. |
+| [eBPF instruction](https://tibs.readthedocs.io/en/latest/example_ebpf_instruction.html) | Decode a real eBPF instruction by chaining LSB0 and little-endian views. |
+| [Fingerprints](https://tibs.readthedocs.io/en/latest/example_fingerprints.html) | Compare items as sets of bits with `count_and`, `count_xor` and `is_subset_of`. |
+| [Parallel decode](https://tibs.readthedocs.io/en/latest/example_parallel_decode.html) | Decode millions of samples across threads on a free-threaded build, with no copying and no locks. |
+
+The [rest of the examples](https://tibs.readthedocs.io/en/latest/examples.html)
+cover stream scanning, in-place patching, structured headers, bulk sample
+packing and scattered register fields.
+
+
+## Project status
+
+Tibs is considered 'stable' and has reached version 2. Documented public behavior will
+remain compatible across future 2.x releases. It is already used to power the `bitstring` 
+library and gets several million downloads per month.
+
+There are thousands of unit tests, including Hypothesis tests and performance
+benchmarks.
+
+
+For the full API reference, see the
+[documentation](https://tibs.readthedocs.io/en/latest/).
+
+
+## Credits
+
+The `tibs` library was created by Scott Griffiths and is released under the MIT License.
+
+The Tibs cat artwork was created by Ada Griffiths and is not covered by the software license. All rights reserved.
+
+<p>
+  <img src="https://raw.githubusercontent.com/scott-griffiths/tibs/main/doc/_static/tibs_white_sleeping.png" alt="Tibs cat" height="110" align="left" />
+</p>
+

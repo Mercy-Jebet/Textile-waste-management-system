@@ -1,0 +1,116 @@
+mutation CreateUserData @auth(level: USER) {
+  user_insert(data: {
+    id_expr: "auth.uid",
+    email: "user@example.com",
+    role: "Member",
+    totalPoints: 0
+  })
+}
+
+mutation UpdateUserPoints($points: Int!) @auth(level: USER) {
+  user_update(key: {id_expr: "auth.uid"}, data: {totalPoints: $points})
+}
+
+mutation DeleteUserAccount @auth(level: USER) {
+  user_delete(key: {id_expr: "auth.uid"})
+}
+
+query GetCurrentUser @auth(level: USER) {
+  user(key: {id_expr: "auth.uid"}) {
+    email
+    role
+    totalPoints
+  }
+}
+
+query ListAllUsers @auth(level: PUBLIC, insecureReason: "Listing users is permitted for public directory purposes.") {
+  users {
+    email
+    role
+  }
+}
+
+mutation CreateBin($lat: Float!, $long: Float!, $cap: Int!) @auth(level: PUBLIC, insecureReason: "Publicly accessible bin locations.") {
+  bin_insert(data: {latitude: $lat, longitude: $long, currentCapacity: $cap, binStatus: "Active"})
+}
+
+mutation UpdateBinStatus($id: UUID!, $status: String!) @auth(level: PUBLIC, insecureReason: "Status updates are public.") {
+  bin_update(key: {id: $id}, data: {binStatus: $status})
+}
+
+mutation DeleteBin($id: UUID!) @auth(level: PUBLIC, insecureReason: "Bin removal is allowed.") {
+  bin_delete(key: {id: $id})
+}
+
+query GetBin($id: UUID!) @auth(level: PUBLIC, insecureReason: "Publicly readable.") {
+  bin(key: {id: $id}) {
+    latitude
+    longitude
+    currentCapacity
+  }
+}
+
+query ListBins @auth(level: PUBLIC, insecureReason: "Public list of all bins.") {
+  bins {
+    id
+    latitude
+    longitude
+  }
+}
+
+mutation CreateDisposalLog($binId: UUID!, $points: Int!) @auth(level: USER) {
+  disposalLog_insert(data: {
+    binId: $binId,
+    userId_expr: "auth.uid",
+    pointsEarned: $points,
+    timestamp_expr: "request.time"
+  })
+}
+
+mutation DeleteDisposalLog($id: UUID!) @auth(level: USER) {
+  disposalLog_delete(key: {id: $id})
+}
+
+query GetDisposalLog($id: UUID!) @auth(level: USER) {
+  disposalLog(key: {id: $id}) {
+    pointsEarned
+    timestamp
+  }
+}
+
+query ListMyDisposalLogs @auth(level: USER) {
+  disposalLogs(where: {userId: {eq_expr: "auth.uid"}}) {
+    pointsEarned
+    timestamp
+  }
+}
+
+mutation CreateReward($amount: Int!, $date: Date!) @auth(level: USER) {
+  reward_insert(data: {
+    amount: $amount,
+    dateEarned: $date,
+    userId_expr: "auth.uid"
+  })
+}
+
+mutation UpdateReward($id: UUID!, $amount: Int!) @auth(level: USER) {
+  reward_update(key: {id: $id}, data: {amount: $amount})
+}
+
+mutation DeleteReward($id: UUID!) @auth(level: USER) {
+  reward_delete(key: {id: $id})
+}
+
+query GetReward($id: UUID!) @auth(level: USER) {
+  reward(key: {id: $id}) {
+    amount
+    dateEarned
+  }
+}
+
+query ListMyRewards @auth(level: USER) {
+  rewards(where: {userId: {eq_expr: "auth.uid"}}) {
+    amount
+    dateEarned
+  }
+}

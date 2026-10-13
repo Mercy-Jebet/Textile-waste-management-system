@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Collector Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <meta http-equiv="refresh" content="30">
+</head>
+<body>
+    <h1>📊 Collector Dashboard</h1>
+
+    <div class="bin-status {{ colour }}">
+        <h2>Bin Fill Level</h2>
+        <h1>{{ bin.fill_level }}%</h1>
+        <p>Status: {{ bin.status }}</p>
+        <p>Location: {{ bin.location }}</p>
+        <p>Last Updated: {{ bin.last_updated }}</p>
+    </div>
+
+    {% if bin.status == "FULL" %}
+    <div class="alert">
+        ⚠️ Bin is FULL — Email alert sent to collector!
+    </div>
+    {% endif %}
+</body>
+</html>
