@@ -31,7 +31,7 @@ def dashboard():
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5000, debug=False)
 
- # ── IMPORTS ──────────────────────────────────────
+ 
 import firebase_admin
 from firebase_admin import credentials, db, auth
 from flask import Flask, render_template, request, redirect
@@ -40,23 +40,22 @@ from email.mime.text import MIMEText
 from datetime import datetime
 import qrcode
 
-# ── FLASK APP SETUP ───────────────────────────────
 app = Flask(__name__)
 
-# ── FIREBASE CONNECTION ───────────────────────────
+
 cred = credentials.Certificate('serviceAccountKey.json')
 firebase_admin.initialize_app(cred, {
     'databaseURL': 'https://your-project-default-rtdb.firebaseio.com'
 })
 
-# ── ROUTES ────────────────────────────────────────
+
 
 # Home page
 @app.route('/')
 def home():
     return render_template('home.html')
 
-# Collector dashboard
+
 @app.route('/dashboard')
 def dashboard():
     bin_data = db.reference('bins/bin_001').get()
@@ -64,7 +63,6 @@ def dashboard():
         send_alert_email(bin_data['fill_level'])
     return render_template('dashboard.html', bin=bin_data)
 
-# Consumer rewards page
 @app.route('/rewards/<consumer_id>')
 def rewards(consumer_id):
     consumer = db.reference(f'consumers/{consumer_id}').get()
@@ -74,7 +72,7 @@ def rewards(consumer_id):
         deposits=deposits
     )
 
-# Record deposit and credit points
+
 @app.route('/deposit/<consumer_id>', methods=['POST'])
 def deposit(consumer_id):
     ref = db.reference(f'consumers/{consumer_id}')
@@ -89,13 +87,13 @@ def deposit(consumer_id):
     })
     return redirect(f'/rewards/{consumer_id}')
 
-# Leaderboard
+
 @app.route('/leaderboard')
 def leaderboard():
     consumers = db.reference('consumers').get()
     return render_template('leaderboard.html', consumers=consumers)
 
-# Admin panel
+
 @app.route('/admin')
 def admin():
     bins = db.reference('bins').get()
@@ -107,7 +105,7 @@ def admin():
         deposits=deposits
     )
 
-# ── EMAIL ALERT ───────────────────────────────────
+
 def send_alert_email(fill_level):
     msg = MIMEText(
         f'ALERT: Bin is {fill_level}% full. Please collect immediately.'
@@ -119,29 +117,29 @@ def send_alert_email(fill_level):
         s.login('your_email@gmail.com', 'your_app_password')
         s.send_message(msg)
 
-# ── RUN ───────────────────────────────────────────
+
 if __name__ == '__main__':
     app.run(debug=True)   
 
 
 
-# import classes from classes.py
+
 from classes import Sensor, Bin, Consumer, Collector, Deposit, Dashboard
 
-# Firebase connection
+
 import firebase_admin
 from firebase_admin import credentials, db
 from flask import Flask, render_template
 
 app = Flask(__name__)
 
-# connect Firebase
+
 cred = credentials.Certificate('serviceAccountKey.json')
 firebase_admin.initialize_app(cred, {
     'databaseURL': 'https://your-project-default-rtdb.firebaseio.com'
 })
 
-# Flask routes go here
+
 @app.route('/')
 def home():
     return render_template('home.html')
