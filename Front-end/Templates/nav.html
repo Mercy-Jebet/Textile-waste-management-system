@@ -1,0 +1,13 @@
+<nav>
+    <a href="/">Home</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/rewards/consumer_001">Rewards</a>
+    <a href="/leaderboard">Leaderboard</a>
+    {% if is_admin %}
+    <a href="/admin">Admin</a>
+    <a href="/logout">Log out</a>
+    {% endif %}
+</nav>
+{% if demo_mode %}
+<div class="demo-banner">Demo mode — showing sample data. Add serviceAccountKey.json and set FIREBASE_DB_URL to use Firebase.</div>
+{% endif %}

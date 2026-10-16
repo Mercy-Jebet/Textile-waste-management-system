@@ -60,3 +60,30 @@ button {
     font-size: 16px;
     cursor: pointer;
 }
+nav { margin-bottom: 10px; }
+nav a { margin: 4px; padding: 8px 14px; }
+
+a.plain {
+    display: inline;
+    margin: 0;
+    padding: 0;
+    background: none;
+    color: #2E75B6;
+}
+
+.demo-banner {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.login-form { margin-top: 20px; }
+.login-form input {
+    padding: 14px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    margin-right: 8px;
+}

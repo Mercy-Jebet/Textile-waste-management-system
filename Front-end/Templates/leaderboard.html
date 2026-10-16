@@ -1,37 +1,30 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Consumer Rewards</title>
+    <title>Leaderboard</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <h1>🎮 Consumer Rewards</h1>
+    {% include "nav.html" %}
+    <h1>🏆 Leaderboard</h1>
 
-    <h2>Welcome {{ consumer.name }}</h2>
-    <h3>Points Balance: {{ consumer.points_balance }} pts</h3>
-
-    <form action="/deposit/{{ consumer.consumer_id }}" method="POST">
-        <button type="submit">✅ Confirm Textile Deposit (+10 pts)</button>
-    </form>
-
-    <h3>Deposit History</h3>
-    {% if deposits %}
+    {% if consumers %}
     <table>
         <tr>
-            <th>Date</th>
-            <th>Points Earned</th>
+            <th>Rank</th>
+            <th>Name</th>
+            <th>Points</th>
         </tr>
-        {% for key, dep in deposits.items() %}
-        {% if dep.consumer_id == consumer.consumer_id %}
+        {% for c in consumers %}
         <tr>
-            <td>{{ dep.deposit_timestamp }}</td>
-            <td>{{ dep.points_earned }}</td>
+            <td>{{ loop.index }}</td>
+            <td><a class="plain" href="/rewards/{{ c.consumer_id }}">{{ c.name }}</a></td>
+            <td>{{ c.points_balance }}</td>
         </tr>
-        {% endif %}
         {% endfor %}
     </table>
     {% else %}
-    <p>No deposits yet</p>
+    <p>No consumers yet</p>
     {% endif %}
 </body>
 </html>
