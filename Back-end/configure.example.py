@@ -1,4 +1,5 @@
-# Settings for the bin's NodeMCU. Copy this file to the board with main.py and hx711.py.
+# Settings for the bin's NodeMCU. COPY THIS FILE to configure.py and fill in your real values;
+# configure.py is kept out of Git so your Wi-Fi password and device key stay private.
 WIFI_SSID = "YourWiFiName"
 WIFI_PASSWORD = "YourWiFiPassword"
 
