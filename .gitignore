@@ -4,3 +4,5 @@ serviceAccountKey.json
 venv/
 __pycache__/
 .env
+reports/
+Back-end/configure.py

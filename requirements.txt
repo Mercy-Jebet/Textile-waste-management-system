@@ -1,3 +1,6 @@
 Flask>=3.1,<4
 firebase-admin>=7
 qrcode[pil]>=8
+# Only for history_charts.py (fill-level charts for the report)
+pandas>=2
+matplotlib>=3.8

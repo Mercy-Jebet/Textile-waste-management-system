@@ -463,7 +463,7 @@ def begin_verification(kind, username, next_page, welcome=None):
     email = (store.get(f"{ACCOUNT_KINDS[kind][0]}/{username}") or {}).get("email")
     if email:
         send_login_code(kind, username, email)
-    return redirect(url_for("verify"))
+    return redirect(url_for("verify", who=kind))
 
 
 def close_alert(bin_id, alert, how):
@@ -572,6 +572,7 @@ def mark_emptied(bin_id):
     if lv["weight_source"] == "scale":
         emptied["weight_kg"] = 0  # until the bin's scale reports again
     store.update(f"bins/{bin_id}", emptied)
+    save_history(bin_id, "emptied")  # so the charts show the drop to zero
     alert = store.get(f"alerts/{bin_id}")
     if alert:
         close_alert(bin_id, alert, f"marked as emptied by {staff_name()}")
@@ -865,7 +866,11 @@ def verify():
     """Second login step: the code that was emailed to the account."""
     pending = session.get("pending")
     if not LOGIN_EMAIL_CODES or not pending:
-        return redirect(url_for("login"))
+        # The half-finished login was lost (e.g. the app restarted): back to the right login page.
+        if LOGIN_EMAIL_CODES and request.method == "POST":
+            flash("Your login timed out. Please log in again to get a new code.")
+        collector = request.args.get("who") == "collector"
+        return redirect(url_for("collector_login" if collector else "login"))
     kind, username = pending["kind"], pending["id"]
     table, session_key, _ = ACCOUNT_KINDS[kind]
     account = store.get(f"{table}/{username}")
@@ -1023,8 +1028,25 @@ def receive_reading(bin_id):
             abort(400, description="weight_kg must be a number of kg")
         reading["weight_kg"] = round(max(0.0, weight), 2)
     store.update(f"bins/{bin_id}", reading)
+    save_history(bin_id, "reading")
     check_alert(bin_id)
     return jsonify({"ok": True, "bin_id": bin_id, **reading})
+
+
+def save_history(bin_id, event):
+    """Adds one point to readings/<bin_id>, the fill-level history used for charts
+    (history_charts.py). event is "reading" (from the bin) or "emptied" (by a collector)."""
+    lv = bin_levels(bin_id, store.get(f"bins/{bin_id}") or {})
+    store.push(f"readings/{bin_id}", {
+        "ts": int(time.time()),
+        "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "event": event,
+        "volume_pct": lv["volume_pct"],
+        "weight_kg": lv["kg_inside"],
+        "weight_pct": lv["weight_pct"],
+        "fill_pct": lv["fill"],
+        "status": lv["status"],
+    })
 
 
 # ---------------------------------------------------------------- admin
