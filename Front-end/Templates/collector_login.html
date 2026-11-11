@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Collector Log In{% endblock %}
+
+{% block content %}
+<div class="auth">
+    <div class="auth-photo" style="background-image: url('/static/images/recycling-bin.jpg')">
+        <div class="caption">
+            <h2>Collector portal</h2>
+            <p>See every bin's fill level and get an email the moment one is full.</p>
+        </div>
+    </div>
+    <div class="auth-form">
+        <img class="auth-logo" src="/static/images/logo.png" alt="Smartie Bin">
+        <span class="eyebrow">Waste collectors</span>
+        <h1>Collector log in</h1>
+
+        {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+
+        <form method="POST" class="login-form stacked">
+            <input type="text" name="username" placeholder="Collector username" value="{{ request.form.username }}" required autofocus autocomplete="username">
+            <input type="password" name="password" placeholder="Password" required autocomplete="current-password">
+            <button type="submit">Log in</button>
+        </form>
+
+        <p class="hint">Collector accounts are created by the system admin. Dropping off textiles?
+            <a href="/login">Log in here</a> instead.</p>
+        {% if demo_mode %}
+        <p class="hint">Demo collector: <b>collector</b> with password <b>password123</b>.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

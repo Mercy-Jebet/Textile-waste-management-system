@@ -1,38 +1,38 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Consumer Rewards</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-    {% include "nav.html" %}
-    <h1>🎮 Consumer Rewards</h1>
+{% extends "base.html" %}
+{% block title %}My Rewards{% endblock %}
 
-    <h2>Welcome {{ consumer.name }}</h2>
-    <h3>Points Balance: {{ consumer.points_balance }} pts</h3>
+{% block content %}
+{% set mine = deposits.values()|selectattr("consumer_id", "equalto", consumer.consumer_id)|list %}
+<div class="points-card">
+    <div>
+        <span class="eyebrow">My rewards</span>
+        <h1 style="margin-bottom: 4px">Welcome, {{ consumer.name }}</h1>
+        <p class="hint" style="color: #d6cfe6">{{ mine|selectattr("points_earned")|list|length }} accepted deposits so far</p>
+    </div>
+    <div class="big">{{ consumer.points_balance }} <small>pts</small></div>
+</div>
 
-    <form action="/deposit/{{ consumer.consumer_id }}" method="POST">
-        <button type="submit">✅ Confirm Textile Deposit (+10 pts)</button>
-    </form>
+<p style="margin-top: 20px">To earn points, drop your textiles in a smart bin and scan the QR code on it.
+   <a href="/qr-demo">Try the QR simulation</a>.</p>
 
-    <h3>Deposit History</h3>
-    {% if deposits %}
-    <table>
-        <tr>
-            <th>Date</th>
-            <th>Points Earned</th>
-        </tr>
-        {% for key, dep in deposits.items() %}
-        {% if dep.consumer_id == consumer.consumer_id %}
-        <tr>
-            <td>{{ dep.deposit_timestamp }}</td>
-            <td>{{ dep.points_earned }}</td>
-        </tr>
-        {% endif %}
-        {% endfor %}
-    </table>
-    {% else %}
-    <p>No deposits yet</p>
-    {% endif %}
-</body>
-</html>
+<h2>Deposit history</h2>
+{% if mine %}
+<div class="table-wrap">
+<table>
+    <thead><tr><th>Date</th><th>Bin</th><th>Weight</th><th>Points</th></tr></thead>
+    <tbody>
+    {% for dep in mine|reverse %}
+    <tr{% if dep.accepted == false %} class="rejected"{% endif %}>
+        <td>{{ dep.deposit_timestamp }}</td>
+        <td>{{ dep.bin_id }}</td>
+        <td>{{ "%.2f kg"|format(dep.weight_kg) if dep.weight_kg is defined else "—" }}</td>
+        <td>{{ dep.points_earned }}{% if dep.note %} <span class="hint">({{ dep.note }})</span>{% endif %}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<p class="hint">No deposits yet.</p>
+{% endif %}
+{% endblock %}

@@ -1,26 +1,111 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Collector Dashboard</title>
-    <link rel="stylesheet" href="/static/style.css">
-    <meta http-equiv="refresh" content="5">
-</head>
-<body>
-    {% include "nav.html" %}
-    <h1>📊 Collector Dashboard</h1>
+{% extends "base.html" %}
+{% block title %}Collector Dashboard{% endblock %}
+{% block head %}<meta http-equiv="refresh" content="15">{% endblock %}
 
-    <div class="bin-status {{ colour }}">
-        <h2>Bin Fill Level</h2>
-        <h1>{{ bin.fill_level }}%</h1>
-        <p>Status: {{ bin.status }}</p>
-        <p>Location: {{ bin.location }}</p>
-        <p>Last Updated: {{ bin.last_updated }}</p>
-    </div>
+{% block content %}
+<div class="page-title">
+    <span class="eyebrow">Collector dashboard</span>
+    <h1>Bin capacity</h1>
+    <p>{{ bins|length }} bins · {{ open_alerts }} open alert{{ "" if open_alerts == 1 else "s" }} ·
+        each bin holds {{ "%g"|format(capacity) }} kg · an alert opens at {{ threshold }}% by weight or volume · refreshes every 15 s</p>
+</div>
 
-    {% if bin.status == "FULL" %}
-    <div class="alert">
-        ⚠️ Bin is FULL — Email alert sent to collector!
-    </div>
+<div class="alert-settings">
+    <span>
+    {% if me.get("alerts_enabled", True) %}
+    🔔 Bin-full alerts are emailed to <b>{{ me.email or "no address yet" }}</b>
+    {% else %}
+    🔕 Bin-full alerts are <b>not</b> emailed to you
     {% endif %}
-</body>
-</html>
+    </span>
+    <form method="POST" action="/dashboard/alerts" class="inline">
+        <button type="submit" class="small secondary">{{ "Turn off" if me.get("alerts_enabled", True) else "Turn on" }}</button>
+    </form>
+</div>
+
+<div class="bin-grid">
+{% for b in bins %}
+    <div class="bin-card {{ b.colour }}">
+        <div class="bin-gauge" title="{{ b.fill_level }}% full">
+            <div class="lid"></div>
+            <div class="body">
+                <div class="fill" style="height: {{ b.fill_level }}%"></div>
+                <span class="pct">{{ b.fill_level|round|int }}%</span>
+            </div>
+        </div>
+        <div class="bin-info">
+        <h2>{{ b.location or b.bin_id }}</h2>
+        <p class="hint">{{ b.bin_id }}</p>
+        <p>Status: <b>{{ b.status }}</b><br>Space left: <b>{{ b.space_left|round|int }}%</b></p>
+        </div>
+        <div class="bin-more">
+        <div class="levels">
+            <div class="level{% if b.weight_pct >= threshold %} over{% endif %}">
+                <span>⚖️ Weight</span>
+                <b>{{ "%.1f"|format(b.kg_inside) }} / {{ "%g"|format(capacity) }} kg</b>
+                <div class="mini-bar"><div style="width: {{ b.weight_pct }}%"></div></div>
+                <small>{{ b.weight_pct|round|int }}%{% if b.weight_source == "deposits" %} · from weighed deposits{% endif %}</small>
+            </div>
+            <div class="level{% if b.volume_pct >= threshold %} over{% endif %}">
+                <span>📏 Volume</span>
+                <b>{{ b.volume_pct|round|int }}% full</b>
+                <div class="mini-bar"><div style="width: {{ b.volume_pct }}%"></div></div>
+                <small>ultrasonic sensor</small>
+            </div>
+        </div>
+        <p class="hint">Last reading: {{ b.last_updated or "never" }}
+            {% if b.last_emptied %}<br>Last emptied: {{ b.last_emptied }}{% endif %}</p>
+
+        {% if b.alert %}
+        <div class="alert">
+            ⚠️ <b>Full since {{ b.alert.raised_at }}</b>
+            {% if b.alert.reason %}<br>{{ b.alert.reason }}{% else %}({{ b.alert.fill_level }}%){% endif %}
+            <p class="email-status">
+            {% if b.alert.email_sent %}
+                📧 Email {{ b.alert.email_note }}
+            {% else %}
+                📧 No email sent: {{ b.alert.email_note }}
+            {% endif %}
+            </p>
+            {% if b.alert.acknowledged_by %}
+            <p class="email-status">✔ Acknowledged by {{ b.alert.acknowledged_by }} at {{ b.alert.acknowledged_at }}</p>
+            {% else %}
+            <form method="POST" action="/dashboard/{{ b.bin_id }}/acknowledge" class="inline">
+                <button type="submit" class="small">Acknowledge</button>
+            </form>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="/dashboard/{{ b.bin_id }}/emptied" class="inline"
+              onsubmit="return confirm('Mark {{ b.bin_id }} as emptied?')">
+            <button type="submit" class="small secondary">Mark as emptied</button>
+        </form>
+        </div>
+    </div>
+{% else %}
+    <p>No bins yet. Run <code>python seed_firebase.py</code> or start the bin to create one.</p>
+{% endfor %}
+</div>
+
+<h2>Recent collections</h2>
+{% if collections %}
+<div class="table-wrap">
+<table>
+    <thead><tr><th>Emptied</th><th>Bin</th><th>Fill before</th><th>By</th></tr></thead>
+    <tbody>
+    {% for c in collections %}
+    <tr>
+        <td>{{ c.emptied_at }}</td>
+        <td>{{ c.location or c.bin_id }}</td>
+        <td>{{ c.fill_level_before }}%</td>
+        <td>{{ c.emptied_by }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<p class="hint">None yet.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Users · Admin{% endblock %}
+
+{% block content %}
+<div class="page-title">
+    <span class="eyebrow">Admin</span>
+    <h1>Users</h1>
+    <p>Turn accounts off to stop them logging in. Their points and history are kept, and you can turn them back on at any time.</p>
+</div>
+{% include "admin_nav.html" %}
+
+<h2 id="collectors">Collectors</h2>
+<div class="admin-split">
+    <form method="POST" action="/admin/collectors" class="card login-form stacked add-form">
+        <h3>Add a collector</h3>
+        <input type="text" name="name" placeholder="Full name" required>
+        <input type="text" name="username" placeholder="Username (3-30 letters, numbers, _ or -)" required pattern="[A-Za-z0-9_\-]{3,30}">
+        <input type="email" name="email" placeholder="Email (gets bin-full alerts)" required>
+        <input type="password" name="password" placeholder="Starting password (6+ characters)" required minlength="6" autocomplete="new-password">
+        <button type="submit">Add collector</button>
+        <p class="hint" style="margin: 10px 0 0">Give them the username and password. They log in at <code>/collector/login</code>.</p>
+    </form>
+
+    <div>
+    {% if collectors %}
+    <div class="table-wrap" style="margin-top: 0">
+    <table>
+        <thead><tr><th>Collector</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+        {% for username, c in collectors %}
+        <tr{% if c.disabled %} class="rejected"{% endif %}>
+            <td><b>{{ c.name or username }}</b><br><span class="hint">{{ username }}</span></td>
+            <td>{{ c.email or "—" }}</td>
+            <td>{% if c.disabled %}<span class="badge invalid">Off</span>{% else %}<span class="badge accepted">Active</span>{% endif %}</td>
+            <td class="actions">
+                <form method="POST" action="/admin/users/collector/{{ username }}/toggle" class="inline">
+                    <button type="submit" class="small secondary">{{ "Turn on" if c.disabled else "Turn off" }}</button>
+                </form>
+                <details class="inline-details">
+                    <summary class="btn small secondary">Password</summary>
+                    <form method="POST" action="/admin/collectors/{{ username }}/password" class="mini-form">
+                        <input type="password" name="password" placeholder="New password" required minlength="6" autocomplete="new-password">
+                        <button type="submit" class="small">Save</button>
+                    </form>
+                </details>
+                <form method="POST" action="/admin/collectors/{{ username }}/delete" class="inline"
+                      onsubmit="return confirm('Remove collector {{ username }}? This can\'t be undone.')">
+                    <button type="submit" class="small secondary danger">Remove</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
+    <p class="hint">No collectors yet. Add the first one with the form.</p>
+    {% endif %}
+    </div>
+</div>
+
+<h2 id="consumers">Consumers</h2>
+{% if consumers %}
+<div class="table-wrap">
+<table>
+    <thead><tr><th>Consumer</th><th>Email</th><th>Points</th><th>Deposits</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>
+    {% for username, c in consumers %}
+    <tr{% if c.disabled %} class="rejected"{% endif %}>
+        <td><b>{{ c.name or username }}</b><br><span class="hint">{{ username }}</span></td>
+        <td>{{ c.email or "—" }}</td>
+        <td>{{ c.points_balance or 0 }}</td>
+        <td><a href="/admin/deposits?consumer={{ username }}">{{ counts.get(username, 0) }}</a></td>
+        <td>{% if c.disabled %}<span class="badge invalid">Off</span>{% else %}<span class="badge accepted">Active</span>{% endif %}</td>
+        <td class="actions">
+            <form method="POST" action="/admin/users/consumer/{{ username }}/toggle" class="inline"
+                  {% if not c.disabled %}onsubmit="return confirm('Turn off {{ username }}? They won\'t be able to log in or deposit.')"{% endif %}>
+                <button type="submit" class="small secondary{% if not c.disabled %} danger{% endif %}">{{ "Turn on" if c.disabled else "Turn off" }}</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<p class="hint">No consumers yet.</p>
+{% endif %}
+{% endblock %}
