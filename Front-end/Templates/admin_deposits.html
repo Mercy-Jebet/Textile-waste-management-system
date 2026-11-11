@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Deposits · Admin{% endblock %}
+
+{% block content %}
+<div class="page-title">
+    <span class="eyebrow">Admin</span>
+    <h1>Deposits &amp; rewards</h1>
+    <p>Mark a deposit invalid if it wasn't really textiles: its points are taken back and the consumer sees your reason.
+        Approve a flagged or rejected deposit to give it the {{ points }} points.</p>
+</div>
+{% include "admin_nav.html" %}
+
+<div class="filter-row">
+    {% set consumer = request.args.get("consumer") %}
+    <a class="chip{% if show == 'all' %} active{% endif %}" href="/admin/deposits">All</a>
+    {% for s in ["flagged", "accepted", "rejected", "invalid"] %}
+    <a class="chip{% if show == s %} active{% endif %}" href="/admin/deposits?show={{ s }}">{{ s|capitalize }} <b>{{ counts[s] }}</b></a>
+    {% endfor %}
+</div>
+
+{% set rows = deposits|selectattr("consumer_id", "equalto", consumer)|list if consumer else deposits %}
+{% if consumer %}<p class="hint">Showing deposits by <b>{{ consumer }}</b> · <a href="/admin/deposits">show everyone</a></p>{% endif %}
+
+{% if rows %}
+<div class="table-wrap">
+<table>
+    <thead><tr><th>Date</th><th>Consumer</th><th>Bin</th><th>Weight</th><th>Points</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>
+    {% for d in rows %}
+    <tr>
+        <td>{{ d.deposit_timestamp }}</td>
+        <td>{{ d.consumer_id }}</td>
+        <td>{{ d.bin_id }}</td>
+        <td>{{ "%.2f kg"|format(d.weight_kg) if d.weight_kg is defined else "—" }}</td>
+        <td>{{ d.points_earned or 0 }}{% if d.points_revoked %} <span class="hint">(−{{ d.points_revoked }})</span>{% endif %}</td>
+        <td>
+            <span class="badge {{ d.status }}">{{ d.status|capitalize }}</span>
+            {% if d.note %}<br><span class="hint">{{ d.note }}</span>{% endif %}
+        </td>
+        <td class="actions">
+            {% if d.status == "accepted" %}
+            <details class="inline-details">
+                <summary class="btn small secondary danger">Mark invalid</summary>
+                <form method="POST" action="/admin/deposits/{{ d.deposit_id }}/invalidate" class="mini-form">
+                    <input type="text" name="reason" placeholder="Reason, e.g. not textiles" maxlength="120">
+                    <button type="submit" class="small">Take back {{ d.points_earned }} pts</button>
+                </form>
+            </details>
+            {% else %}
+            <form method="POST" action="/admin/deposits/{{ d.deposit_id }}/approve" class="inline">
+                <button type="submit" class="small">Approve (+{{ points }})</button>
+            </form>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<p class="hint">No deposits here.</p>
+{% endif %}
+{% endblock %}

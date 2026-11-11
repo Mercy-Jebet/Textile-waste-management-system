@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}QR Code Demo{% endblock %}
+
+{% block content %}
+<div class="page-title">
+    <span class="eyebrow">How it works</span>
+    <h1>📱 The QR code</h1>
+</div>
+
+{% if not listening %}
+<div class="alert">
+    <b>Phones can't reach the app yet.</b> Add <code>HOST=0.0.0.0</code> to the <code>.env</code> file and restart the app,
+    then open this page again.
+</div>
+{% endif %}
+
+<div class="phone-card card">
+    <img src="/qr/site.png" alt="QR code that opens this page on a phone" width="170" height="170">
+    <div>
+        <span class="eyebrow">Step 1 · on your phone</span>
+        <h2 style="margin-top: 0">Open Smartie Bin on your phone</h2>
+        <p>Scan this with the phone's camera, then log in or register. After that, scan a bin's code below.</p>
+        <p class="hint">The codes point to <code>{{ phone_url }}</code>. Your phone must be on the same Wi-Fi or hotspot as this laptop.</p>
+    </div>
+</div>
+
+<ol class="steps">
+    <li>Every smart bin has a QR code sticker. The code holds a link to that bin, for example <code>/scan/bin_001</code>.</li>
+    <li>The bin's flap stays locked. The consumer scans the code with their phone camera.</li>
+    <li>The link opens this website. Visitors who aren't signed in log in or register first, then come straight back to the bin.</li>
+    <li>They tap <b>Open the bin</b>. The bin weighs itself, opens its flap, and its IR sensor watches the textiles go in.</li>
+    <li>When they're done the flap closes and the bin weighs itself again. If something went in and it weighs at least 100 g, they earn points. Unusually heavy deposits (stones, metal) are flagged instead.</li>
+    <li>The same person can only deposit at the same bin once every 5 minutes, so repeated scans don't earn extra points.</li>
+</ol>
+
+<h2>Step 2 · scan a bin</h2>
+<p class="hint">Scan a bin's code with your phone, or click <b>Simulate scan</b> to do the same on this computer.</p>
+
+<div class="qr-grid">
+    {% for bin_id, b in bins.items() %}
+    <div class="qr-card">
+        <img src="/qr/{{ bin_id }}.png" alt="QR code for {{ bin_id }}" width="180" height="180">
+        <h3>{{ b.location or bin_id }}</h3>
+        <p class="hint">{{ bin_id }} · {{ b.fill_level }}% full</p>
+        <a class="btn small" href="/scan/{{ bin_id }}">📷 Simulate scan</a>
+    </div>
+    {% else %}
+    <p class="alert">There are no bins in the database yet. Run <code>python seed_firebase.py</code> to create them.</p>
+    {% endfor %}
+</div>
+
+<p class="hint">Phone can't open the page? Campus Wi-Fi often stops devices talking to each other: connect the laptop to your phone's hotspot instead, restart the app and reload this page. Also allow Python through Windows Firewall when it asks.</p>
+{% endblock %}

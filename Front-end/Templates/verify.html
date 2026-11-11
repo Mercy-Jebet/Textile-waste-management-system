@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Check Your Email{% endblock %}
+
+{% block content %}
+<div class="auth">
+    <div class="auth-photo" style="background-image: url('/static/images/purple-cloth.jpg')">
+        <div class="caption">
+            <h2>One more step</h2>
+            <p>We check it's really you before logging you in.</p>
+        </div>
+    </div>
+    <div class="auth-form">
+        <h1>Check your email</h1>
+
+        {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+
+        {% if sent_to %}
+        <p>We sent a 6-digit code to <b>{{ sent_to }}</b>. It expires in 10 minutes.</p>
+        <form method="POST" class="login-form stacked">
+            <input type="hidden" name="action" value="code">
+            <input type="text" name="code" placeholder="6-digit code" inputmode="numeric"
+                   pattern="[0-9 ]{6,7}" maxlength="7" required autofocus autocomplete="one-time-code">
+            <button type="submit">Verify and log in</button>
+        </form>
+        <form method="POST" class="inline">
+            <input type="hidden" name="action" value="resend">
+            <button type="submit" class="small secondary">Send a new code</button>
+        </form>
+        {% elif sending_failed %}
+        <p>We couldn't email your login code. Check your connection and try again.</p>
+        <form method="POST" class="inline">
+            <input type="hidden" name="action" value="resend">
+            <button type="submit" class="small">Try again</button>
+        </form>
+        {% endif %}
+
+        {% if can_change_email %}
+        <h3 style="margin-top: 24px">{% if sent_to or sending_failed %}Wrong email address?{% else %}Add your email address{% endif %}</h3>
+        {% if not sent_to and not sending_failed %}
+        <p class="hint">Your account has no email address yet. We need one to send your login code.</p>
+        {% endif %}
+        <form method="POST" class="login-form stacked">
+            <input type="hidden" name="action" value="email">
+            <input type="email" name="email" placeholder="you@example.com" required autocomplete="email">
+            <button type="submit" class="small secondary">Send the code here</button>
+        </form>
+        {% endif %}
+
+        <p style="margin-top: 16px"><a href="/logout">Cancel</a></p>
+    </div>
+</div>
+{% endblock %}

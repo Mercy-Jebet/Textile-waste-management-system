@@ -1,12 +1,92 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Textile Waste System</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-    {% include "nav.html" %}
-    <h1>♻️ Textile Waste Management System</h1>
-    <p>Helping Nairobi manage textile waste smartly</p>
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block hero %}
+{% set bolt %}<path d="M14 1 L2 23 H11 L7 39 L22 14 H13 Z"/>{% endset %}
+<section class="hero">
+    <div class="container hero-grid">
+        <div class="hero-text">
+            <span class="eyebrow">Smart textile bins · Nairobi</span>
+            <h1>Old clothes deserve a <mark>second life</mark>.</h1>
+            <p class="lead">Drop your unwanted textiles in a Smartie Bin, scan its QR code and earn points.
+                Collectors get a ping the moment a bin is full, so nothing overflows.</p>
+            <div class="btn-row">
+                {% if user_id %}
+                <a class="btn" href="/rewards">See my points</a>
+                {% elif collector_id %}
+                <a class="btn" href="/dashboard">Open the dashboard</a>
+                {% else %}
+                <a class="btn" href="/register">Start earning points</a>
+                <a class="btn btn-outline" href="/qr-demo">See how it works</a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="hero-art">
+            <div class="hero-photo"><img src="/static/images/purple-cloth.jpg" alt="A pile of knitted jumpers, one of them purple"></div>
+            <img class="hero-logo" src="/static/images/logo.png" alt="Smartie Bin logo: for the wear n' tear">
+            <svg class="bolt bolt-1" viewBox="0 0 24 40" aria-hidden="true">{{ bolt }}</svg>
+            <svg class="bolt bolt-2" viewBox="0 0 24 40" aria-hidden="true">{{ bolt }}</svg>
+        </div>
+    </div>
+</section>
+<div class="ticker-wrap" aria-hidden="true">
+    <div class="ticker">
+        <div class="ticker-track">
+            {% for _ in range(4) %}
+            {% for word in ["Drop it", "Scan it", "Earn it", "For the wear n' tear", "Keep textiles out of the landfill"] %}
+            <span>{{ word }}<i class="bolt-ico"></i></span>
+            {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="stats">
+    <div class="stat"><b>{{ bin_count }}</b><span>Smartie Bins</span></div>
+    <div class="stat"><b>{{ "%.1f"|format(total_kg) }} kg</b><span>textiles saved</span></div>
+    <div class="stat"><b>{{ deposit_count }}</b><span>deposits</span></div>
+    <div class="stat"><b>{{ consumer_count }}</b><span>members</span></div>
+</div>
+
+<h2>How it works</h2>
+<div class="feature-grid">
+    <div class="feature">
+        <img src="/static/images/hero-clothes-pile.jpg" alt="A pile of used clothes and denim">
+        <div>
+            <span class="step">01</span>
+            <h3>Bring your textiles</h3>
+            <p>Clothes, bedding and fabric offcuts you no longer use. Anything from 100 g counts.</p>
+        </div>
+    </div>
+    <div class="feature">
+        <img src="/static/images/folded-jeans.jpg" alt="A person holding a stack of folded jeans">
+        <div>
+            <span class="step">02</span>
+            <h3>Scan and drop</h3>
+            <p>Scan the bin's QR code. The flap pops open, a sensor sees your textiles go in and the scale weighs them.</p>
+        </div>
+    </div>
+    <div class="feature">
+        <img src="/static/images/sweaters.jpg" alt="Colourful sweaters hanging on a rack">
+        <div>
+            <span class="step">03</span>
+            <h3>Earn points</h3>
+            <p>Every accepted drop earns {{ points }} points. Climb the leaderboard with your friends.</p>
+        </div>
+    </div>
+</div>
+
+<section class="band">
+    <img src="/static/images/recycling-bin.jpg" alt="A recycling bin with the recycling symbol">
+    <div>
+        <span class="eyebrow">For waste collectors</span>
+        <h2 style="margin-top: 0">Know which bins need you</h2>
+        <p>See how full every bin is, live, and get an email as soon as one fills up. Acknowledge the alert and mark the bin as emptied when you're done.</p>
+        <div class="btn-row" style="margin-top: 8px">
+            <a class="btn" href="/collector/login">Collector login</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

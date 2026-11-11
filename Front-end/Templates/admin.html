@@ -1,24 +1,40 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Admin Panel</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-    {% include "nav.html" %}
-    <h1>⚙️ Admin Panel</h1>
+{% extends "base.html" %}
+{% block title %}Admin{% endblock %}
 
-    <h2>Bins</h2>
-    {% if bins %}
+{% block content %}
+<div class="page-title">
+    <span class="eyebrow">Admin</span>
+    <h1>Admin panel</h1>
+</div>
+{% include "admin_nav.html" %}
+
+<div class="stats">
+    <div class="stat"><b>{{ consumers|length }}</b><span>consumers</span></div>
+    <div class="stat"><b>{{ collectors|length }}</b><span>collectors</span></div>
+    <div class="stat"><b>{{ deposit_count }}</b><span>deposits</span></div>
+    <div class="stat"><b>{{ "%.1f"|format(total_kg) }} kg</b><span>textiles collected</span></div>
+</div>
+
+{% if flagged_count %}
+<div class="alert" style="margin-top: 24px">
+    ⚠️ <b>{{ flagged_count }} deposit{{ "" if flagged_count == 1 else "s" }} flagged</b> by the bins for being unusually heavy.
+    <a href="/admin/deposits?show=flagged">Review {{ "it" if flagged_count == 1 else "them" }}</a>
+</div>
+{% endif %}
+
+<h2>Bins</h2>
+{% if bins %}
+<div class="table-wrap">
+<table>
+    <thead><tr><th>Bin</th><th>Location</th><th>Fill level</th><th>Status</th><th>Last reading</th></tr></thead>
+    <tbody>
     {% for key, b in bins.items() %}
-    <p>{{ key }} — {{ b.fill_level }}% — {{ b.status }}</p>
+    <tr><td>{{ key }}</td><td>{{ b.location }}</td><td>{{ b.fill_level }}%</td><td>{{ b.status }}</td><td>{{ b.last_updated }}</td></tr>
     {% endfor %}
-    {% endif %}
-
-    <h2>Total Consumers</h2>
-    <p>{{ consumers|length if consumers else 0 }} registered</p>
-
-    <h2>Total Deposits</h2>
-    <p>{{ deposits|length if deposits else 0 }} deposits made</p>
-</body>
-</html>
+    </tbody>
+</table>
+</div>
+{% else %}
+<p class="hint">No bins yet.</p>
+{% endif %}
+{% endblock %}

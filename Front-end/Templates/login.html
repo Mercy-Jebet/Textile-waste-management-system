@@ -1,20 +1,32 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Admin Login</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-    {% include "nav.html" %}
-    <h1>🔒 Admin Login</h1>
+{% extends "base.html" %}
+{% block title %}Log In{% endblock %}
 
-    {% if error %}
-    <div class="alert">{{ error }}</div>
-    {% endif %}
+{% block content %}
+<div class="auth">
+    <div class="auth-photo" style="background-image: url('/static/images/clothes-rack.jpg')">
+        <div class="caption">
+            <h2>Welcome back</h2>
+            <p>Every bag you drop off keeps textiles out of the landfill.</p>
+        </div>
+    </div>
+    <div class="auth-form">
+        <img class="auth-logo" src="/static/images/logo.png" alt="Smartie Bin">
+        <span class="eyebrow">Members</span>
+        <h1>Log in</h1>
 
-    <form method="POST" class="login-form">
-        <input type="password" name="password" placeholder="Admin password" required autofocus>
-        <button type="submit">Log in</button>
-    </form>
-</body>
-</html>
+        {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+
+        <form method="POST" class="login-form stacked">
+            <input type="text" name="username" placeholder="Username" value="{{ request.form.username }}" required autofocus autocomplete="username">
+            <input type="password" name="password" placeholder="Password" required autocomplete="current-password">
+            <button type="submit">Log in</button>
+        </form>
+
+        <p>No account? <a href="/register{% if request.args.next %}?next={{ request.args.next|urlencode }}{% endif %}">Register here</a>.</p>
+        <p class="hint">Waste collector? Use the <a href="/collector/login">collector login</a>.</p>
+        {% if demo_mode %}
+        <p class="hint">Demo accounts: <b>amina</b>, <b>brian</b> or <b>wanjiru</b> with password <b>password123</b>.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

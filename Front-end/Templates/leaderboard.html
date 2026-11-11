@@ -1,30 +1,42 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Leaderboard</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-    {% include "nav.html" %}
-    <h1>🏆 Leaderboard</h1>
+{% extends "base.html" %}
+{% block title %}Leaderboard{% endblock %}
 
-    {% if consumers %}
-    <table>
-        <tr>
-            <th>Rank</th>
-            <th>Name</th>
-            <th>Points</th>
-        </tr>
-        {% for c in consumers %}
-        <tr>
-            <td>{{ loop.index }}</td>
-            <td><a class="plain" href="/rewards/{{ c.consumer_id }}">{{ c.name }}</a></td>
-            <td>{{ c.points_balance }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-    {% else %}
-    <p>No consumers yet</p>
-    {% endif %}
-</body>
-</html>
+{% block content %}
+<div class="page-title">
+    <span class="eyebrow">Community</span>
+    <h1>🏆 Leaderboard</h1>
+    <p>The members who have kept the most textiles out of the landfill.</p>
+</div>
+
+{% if consumers %}
+{% if consumers|length >= 3 %}
+<div class="podium">
+    {% for i, medal, cls in [(1, "🥈", "second"), (0, "🥇", "first"), (2, "🥉", "third")] %}
+    <div class="place {{ cls }}">
+        <div class="medal">{{ medal }}</div>
+        <div class="name">{{ consumers[i].name }}</div>
+        <div class="pts">{{ consumers[i].points_balance }} pts</div>
+        <div class="block">{{ i + 1 }}</div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="table-wrap">
+<table>
+    <thead><tr><th>Rank</th><th>Name</th><th>Points</th></tr></thead>
+    <tbody>
+    {% for c in consumers %}
+    <tr>
+        <td class="rank">#{{ loop.index }}</td>
+        <td>{{ c.name }}</td>
+        <td>{{ c.points_balance }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<p class="hint">No members yet.</p>
+{% endif %}
+{% endblock %}

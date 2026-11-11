@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="auth">
+    <div class="auth-photo" style="background-image: url('/static/images/folded-jeans.jpg')">
+        <div class="caption">
+            <h2>Join in</h2>
+            <p>Earn points every time you recycle your textiles at a smart bin.</p>
+        </div>
+    </div>
+    <div class="auth-form">
+        <img class="auth-logo" src="/static/images/logo.png" alt="Smartie Bin">
+        <span class="eyebrow">New member</span>
+        <h1>Create an account</h1>
+
+        {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+
+        <form method="POST" class="login-form stacked">
+            <input type="text" name="name" placeholder="Your name" value="{{ request.form.name }}" autocomplete="name">
+            <input type="text" name="username" placeholder="Username" value="{{ request.form.username }}" required autofocus autocomplete="username">
+            <input type="email" name="email" placeholder="Email" value="{{ request.form.email }}" required autocomplete="email">
+            <input type="password" name="password" placeholder="Password (6+ characters)" required autocomplete="new-password">
+            <input type="password" name="confirm" placeholder="Confirm password" required autocomplete="new-password">
+            <button type="submit">Register</button>
+        </form>
+
+        <p>Already registered? <a href="/login{% if request.args.next %}?next={{ request.args.next|urlencode }}{% endif %}">Log in</a>.</p>
+    </div>
+</div>
+{% endblock %}

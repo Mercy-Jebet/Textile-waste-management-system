@@ -1,13 +1,16 @@
-"""Simulates the smart bin's ultrasonic sensor without any hardware.
+"""Simulates the smart bin's sensors without any hardware.
 
-It follows the same steps as smart-bin/main.py on the NodeMCU:
+It follows the same steps as Back-end/main.py on the NodeMCU:
   1. "Measure" the distance from the lid to the top of the textiles (cm)
   2. Convert the distance into a fill level (%) and status (OK / FILLING / FULL)
   3. Send the reading to the server
+  4. Between readings, ask the server whether someone scanned the QR code. If so,
+     "open the flap", pretend the IR sensor and scale saw a deposit, and report it.
 
 Instead of a real HC-SR04 sensor, the textile pile grows as simulated people
 make deposits, with small random sensor noise and the occasional bad echo.
-Once the bin is FULL, a collector empties it a few readings later.
+Once the bin is FULL, a collector empties it a few readings later. Most simulated
+QR deposits are normal, but some are empty (nothing went in) or suspiciously heavy.
 
 Start the web app first (python app.py), then in a second terminal:
     python smart-bin/simulator.py
@@ -16,10 +19,25 @@ Start the web app first (python app.py), then in a second terminal:
 
 import argparse
 import json
+import os
 import random
 import time
 import urllib.error
 import urllib.request
+
+
+def device_key_from_env():
+    """DEVICE_API_KEY from the environment or the project's .env file, like app.py uses."""
+    if os.environ.get("DEVICE_API_KEY"):
+        return os.environ["DEVICE_API_KEY"]
+    env_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
+    if os.path.exists(env_file):
+        with open(env_file, encoding="utf-8") as f:
+            for line in f:
+                key, sep, value = line.strip().partition("=")
+                if sep and key.strip() == "DEVICE_API_KEY" and value.strip():
+                    return value.strip().strip('"').strip("'")
+    return "demo-device-key"
 
 BIN_HEIGHT = 50          # cm from sensor to bin floor, same as main.py
 SENSOR_MAX_RANGE = 400   # HC-SR04 reports up to ~4 m
@@ -92,21 +110,57 @@ def get_status(fill_level):
     return "OK"
 
 
-def send_reading(server, bin_id, device_key, fill_level, status):
-    body = json.dumps({"fill_level": fill_level, "status": status}).encode()
+def api_post(server, path, device_key, data):
+    """Returns (reply as a dict or None, short description of what happened)."""
     req = urllib.request.Request(
-        f"{server}/api/bins/{bin_id}",
-        data=body,
+        f"{server}{path}",
+        data=json.dumps(data).encode(),
         method="POST",
         headers={"Content-Type": "application/json", "X-Device-Key": device_key},
     )
     try:
         with urllib.request.urlopen(req, timeout=5) as resp:
-            return f"sent ({resp.status})"
+            return json.loads(resp.read() or b"{}"), f"sent ({resp.status})"
     except urllib.error.HTTPError as e:
-        return f"server rejected reading ({e.code})"
+        return None, f"server rejected it ({e.code})"
     except urllib.error.URLError as e:
-        return f"server unreachable ({e.reason}) - is app.py running?"
+        return None, f"server unreachable ({e.reason}) - is app.py running?"
+
+
+def send_reading(server, bin_id, device_key, fill_level, status):
+    return api_post(server, f"/api/bins/{bin_id}", device_key,
+                    {"fill_level": fill_level, "status": status})[1]
+
+
+def simulate_qr_deposit(bin_):
+    """What the real bin measures after a scan: (weight added in kg, IR sensor triggered)."""
+    time.sleep(2)  # the consumer puts their textiles in
+    roll = random.random()
+    if roll < 0.08:  # scanned, then walked away without depositing
+        return round(random.gauss(0, 0.02), 3), False
+    if roll < 0.13:  # stones or metal hidden in the bag
+        weight = round(random.uniform(6, 12), 2)
+    else:
+        weight = round(random.uniform(0.3, 3.0), 2)
+    bin_.pile_height = min(BIN_HEIGHT, bin_.pile_height + weight * 2)  # about 2 cm per kg
+    return weight, True
+
+
+def poll_for_scans(args, bin_):
+    """Asks the server once a second whether someone scanned the bin, for one reading interval."""
+    end = time.time() + args.interval
+    while time.time() < end:
+        reply, _ = api_post(args.server, f"/api/bins/{args.bin}/session", args.key, {})
+        if reply and reply.get("session_id"):
+            print("     >> QR code scanned: flap opened")
+            weight, ir_triggered = simulate_qr_deposit(bin_)
+            reply, result = api_post(args.server, f"/api/bins/{args.bin}/deposit", args.key, {
+                "session_id": reply["session_id"], "weight_kg": weight, "ir_triggered": ir_triggered})
+            if reply:
+                result = f"+{reply['points']} pts" if reply["accepted"] else f"not counted: {reply['reason']}"
+            print(f"     >> flap closed | IR {'triggered' if ir_triggered else 'saw nothing'} | "
+                  f"{weight:+.2f} kg | {result}")
+        time.sleep(max(0, min(1, end - time.time())))
 
 
 def bar(fill_level, width=20):
@@ -115,10 +169,10 @@ def bar(fill_level, width=20):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Simulate a smart textile bin sensor")
+    parser = argparse.ArgumentParser(description="Simulate a smart textile bin's sensors")
     parser.add_argument("--bin", default="bin_001", help="bin id to report as (default: bin_001)")
     parser.add_argument("--server", default="http://127.0.0.1:5000", help="web app address")
-    parser.add_argument("--key", default="demo-device-key", help="device key (DEVICE_API_KEY on the server)")
+    parser.add_argument("--key", default=device_key_from_env(), help="device key (default: DEVICE_API_KEY from .env)")
     parser.add_argument("--interval", type=float, default=3, help="seconds between readings (real device: 30)")
     parser.add_argument("--readings", type=int, default=0, help="stop after this many readings (0 = run forever)")
     parser.add_argument("--start", type=float, default=0, help="starting fill level in %%")
@@ -148,7 +202,10 @@ def main():
                 if bin_.maybe_collect(status):
                     print("     >> collector emptied the bin")
 
-            time.sleep(args.interval)
+            if args.offline:
+                time.sleep(args.interval)
+            else:
+                poll_for_scans(args, bin_)
     except KeyboardInterrupt:
         print("\nSimulation stopped")
 

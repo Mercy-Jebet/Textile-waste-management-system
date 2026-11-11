@@ -1,0 +1,5 @@
+<nav class="subnav">
+    <a href="/admin"{% if request.path == "/admin" %} class="active"{% endif %}>Overview</a>
+    <a href="/admin/users"{% if request.path == "/admin/users" %} class="active"{% endif %}>Users</a>
+    <a href="/admin/deposits"{% if request.path == "/admin/deposits" %} class="active"{% endif %}>Deposits &amp; rewards</a>
+</nav>
